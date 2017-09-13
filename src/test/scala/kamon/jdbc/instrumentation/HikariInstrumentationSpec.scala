@@ -1,18 +1,31 @@
+/* =========================================================================================
+ * Copyright © 2013-2017 the kamon project <http://kamon.io/>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the
+ * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions
+ * and limitations under the License.
+ * =========================================================================================
+ */
+
 package kamon.jdbc.instrumentation
 
 import java.sql.SQLException
 import java.util.concurrent.Executors
 
 import com.zaxxer.hikari.{HikariConfig, HikariDataSource}
-import kamon.Kamon
 import kamon.jdbc.Metrics.ConnectionPoolMetrics
 import kamon.testkit.MetricInspection
-import org.scalatest.{Matchers, WordSpec}
 import org.scalatest.concurrent.Eventually
 import org.scalatest.time.SpanSugar
+import org.scalatest.{Matchers, WordSpec}
 
-import scala.concurrent.{Await, ExecutionContext, Future}
-import scala.util.Try
+import scala.concurrent.ExecutionContext
 
 class HikariInstrumentationSpec extends WordSpec with Matchers with Eventually with SpanSugar with MetricInspection {
   implicit val parallelQueriesContext = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(16))
@@ -52,7 +65,7 @@ class HikariInstrumentationSpec extends WordSpec with Matchers with Eventually w
         ConnectionPoolMetrics.OpenConnections.refine(
           "poolVendor" -> "hikari",
           "poolName" -> "track-open-connections"
-        ).distribution().max shouldBe (1)
+        ).distribution().max shouldBe (0)
       }
 
       pool.close()
@@ -85,7 +98,7 @@ class HikariInstrumentationSpec extends WordSpec with Matchers with Eventually w
 
     "track the time it takes to borrow a connection" in {
       val pool = createPool("track-borrow-time", 5)
-      for (id ← 1 to 5) {
+      for (_ ← 1 to 5) {
         pool.getConnection()
       }
 

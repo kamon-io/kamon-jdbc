@@ -7,7 +7,7 @@ JDBC Integration   ![Build Status](https://travis-ci.org/kamon-io/kamon-jdbc.svg
 
 The `kamon-jdbc` module brings bytecode instrumentation to trace jdbc-compatible database requests
 
-The <b>kamon-jdbc</b> module requires you to start your application using the AspectJ Weaver Agent. Kamon will warn you
+The <b>kamon-jdbc</b> module requires you to start your application using the Kamon Agent. Kamon will warn you
 at startup if you failed to do so.
 
 The bytecode instrumentation provided by the `kamon-jdbc` module hooks into the JDBC API to automatically
@@ -20,15 +20,15 @@ Kamon scala module is currently available for Scala 2.10, 2.11 and 2.12.
 
 Supported releases and dependencies are shown below.
 
-| kamon-jdbc  | status | jdk  | scala            | akka   |
-|:------:|:------:|:----:|------------------|:------:|
-|  0.6.7 | stable | 1.7+, 1.8+ | 2.10, 2.11, 2.12  | 2.3.x, 2.4.x |
+| kamon-jdbc  | status | jdk  | scala            
+|:------:|:------:|:----:|------------------
+|  1.0.0-RC1 | experimental | 1.8+ | 2.10, 2.11, 2.12  
 
 To get started with SBT, simply add the following to your `build.sbt`
 file:
 
 ```scala
-libraryDependencies += "io.kamon" %% "kamon-jdbc" % "0.6.7"
+libraryDependencies += "io.kamon" %% "kamon-jdbc" % "experimental-1.0.0-RC1"
 ```
 
 

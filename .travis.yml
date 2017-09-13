@@ -1,6 +1,6 @@
 language: scala
 script:
-  - ./travis-test.sh
+  - sbt +test
 scala:
    - 2.11.8
 jdk:

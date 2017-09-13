@@ -1,5 +1,5 @@
 /* =========================================================================================
- * Copyright © 2013-2016 the kamon project <http://kamon.io/>
+ * Copyright © 2013-2017 the kamon project <http://kamon.io/>
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -14,17 +14,20 @@
  */
 
 
-resolvers += Resolver.bintrayRepo("kamon-io", "snapshots")
-val kamonCore  = "io.kamon" %% "kamon-core" % "1.0.0-RC1-041d105ce8e0eef5f81e2d9e22a6a81342278257"
-val kamonTestkit  = "io.kamon" %% "kamon-testkit" % "1.0.0-RC1-041d105ce8e0eef5f81e2d9e22a6a81342278257"
-val h2 = "com.h2database"% "h2" % "1.4.182"
-val hikariCP = "com.zaxxer" % "HikariCP" % "2.6.2"
+val kamonCore           = "io.kamon"            %% "kamon-core"               % "1.0.0-RC1"
+val kamonTestkit        = "io.kamon"            %% "kamon-testkit"            % "1.0.0-RC1"
+val scalaExtension      = "io.kamon"            %% "agent-scala-extension"    % "0.0.6-experimental"
+
+val h2                  = "com.h2database"      % "h2"       % "1.4.182"
+val hikariCP            = "com.zaxxer"          % "HikariCP" % "2.6.2"
 
 lazy val root = (project in file("."))
+  .enablePlugins(JavaAgent)
   .settings(name := "kamon-jdbc")
-  .settings(aspectJSettings: _*)
+  .settings(javaAgents += "io.kamon"    % "kamon-agent"   % "0.0.6-experimental"  % "compile;test")
+  .settings(resolvers += Resolver.bintrayRepo("kamon-io", "snapshots"))
   .settings(
       libraryDependencies ++=
-        compileScope(kamonCore) ++
-        providedScope(aspectJ, hikariCP) ++
+        compileScope(kamonCore, scalaExtension) ++
+        providedScope(hikariCP) ++
         testScope(h2, kamonTestkit, scalatest, slf4jApi, logbackClassic))
