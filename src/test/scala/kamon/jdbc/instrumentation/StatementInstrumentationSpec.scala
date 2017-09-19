@@ -20,15 +20,15 @@ import java.util.concurrent.Executors
 
 import kamon.Kamon
 import kamon.context.Context
-import kamon.jdbc.instrumentation.StatementInstrumentation.StatementTypes
 import kamon.jdbc.Metrics
+import kamon.jdbc.instrumentation.StatementInstrumentation.StatementTypes
 import kamon.testkit.{MetricInspection, Reconfigure, TestSpanReporter}
 import kamon.trace.Span.TagValue
 import kamon.trace.SpanCustomizer
 import kamon.util.Registration
-import org.scalatest.{BeforeAndAfterAll, Matchers, OptionValues, WordSpec}
 import org.scalatest.concurrent.Eventually
 import org.scalatest.time.SpanSugar
+import org.scalatest.{BeforeAndAfterAll, Matchers, OptionValues, WordSpec}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
