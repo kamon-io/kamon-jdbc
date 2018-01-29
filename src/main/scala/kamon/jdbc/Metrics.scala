@@ -1,6 +1,6 @@
 /*
  * =========================================================================================
- * Copyright © 2013-2017 the kamon project <http://kamon.io/>
+ * Copyright © 2013-2018 the kamon project <http://kamon.io/>
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of the License at
@@ -18,18 +18,18 @@ package kamon.jdbc
 
 import kamon.Kamon
 import kamon.metric.MeasurementUnit.time
-import kamon.metric.{Counter, Histogram, MinMaxCounter}
+import kamon.metric.{Counter, Histogram, RangeSampler}
 
 object Metrics {
 
   object Statements {
-    val InFlight = Kamon.minMaxCounter("jdbc.statements.in-flight")
+    val InFlight = Kamon.rangeSampler("jdbc.statements.in-flight")
   }
 
   case class ConnectionPoolMetrics(
     tags: Map[String, String],
-    openConnections: MinMaxCounter,
-    borrowedConnections: MinMaxCounter,
+    openConnections: RangeSampler,
+    borrowedConnections: RangeSampler,
     borrowTime: Histogram,
     borrowTimeouts: Counter
   ) {
@@ -43,8 +43,8 @@ object Metrics {
   }
 
   object ConnectionPoolMetrics {
-    val OpenConnections     = Kamon.minMaxCounter("jdbc.pool.open-connections")
-    val BorrowedConnections = Kamon.minMaxCounter("jdbc.pool.borrowed-connections")
+    val OpenConnections     = Kamon.rangeSampler("jdbc.pool.open-connections")
+    val BorrowedConnections = Kamon.rangeSampler("jdbc.pool.borrowed-connections")
     val BorrowTime          = Kamon.histogram("jdbc.pool.borrow-time", time.nanoseconds)
     val BorrowTimeouts      = Kamon.counter("jdbc.pool.borrow-timeouts")
 
