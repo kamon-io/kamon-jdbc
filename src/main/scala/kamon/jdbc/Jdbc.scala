@@ -28,14 +28,14 @@ object Jdbc {
   @volatile private var slowQueryProcessor: SlowQueryProcessor = new SlowQueryProcessor.Default
   @volatile private var sqlErrorProcessor: SqlErrorProcessor = new SqlErrorProcessor.Default
 
+  logger.info(s"Starting the Kamon(Jdbc) module")
+
   loadConfiguration(Kamon.config())
 
   Kamon.onReconfigure(new OnReconfigureHook {
     override def onReconfigure(newConfig: Config): Unit =
       Jdbc.loadConfiguration(newConfig)
   })
-
-
 
   private def loadConfiguration(config: Config): Unit = {
     try {
