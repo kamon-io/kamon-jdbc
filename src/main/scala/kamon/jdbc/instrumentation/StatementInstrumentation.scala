@@ -16,13 +16,26 @@
 package kamon.jdbc.instrumentation
 
 import kamon.jdbc.instrumentation.advisor._
-import kamon.jdbc.instrumentation.bridge.MariaPreparedStatement
-import kamon.jdbc.instrumentation.maria.{MariaExecuteQueryMethodInterceptor, MariaExecuteUpdateMethodInterceptor}
-import kamon.jdbc.instrumentation.mixin.HasConnectionPoolMetricsMixin
+import kamon.jdbc.instrumentation.mixin.{HasConnectionPoolMetricsMixin, ProcessOnlyOnceMixin}
+import kanela.agent.libs.net.bytebuddy.matcher.ElementMatchers.{hasSuperType, named}
 import kanela.agent.scala.KanelaInstrumentation
 
 
 class StatementInstrumentation extends KanelaInstrumentation {
+
+  /**
+    * Mix:
+    *
+    * Any class with java.sql.Statement and/or java.sql.PreparedStatement as super type is mixed
+    * with kamon.jdbc.instrumentation.mixin.ProcessOnlyOnceMixin
+    *
+    */
+  forMatchedTypeBy(hasSuperType(named("java.sql.Statement"))
+    .or(hasSuperType(named("java.sql.PreparedStatement")))) { builder =>
+    builder
+      .withMixin(classOf[ProcessOnlyOnceMixin])
+      .build()
+  }
 
   /**
     * Instrument:
@@ -38,16 +51,16 @@ class StatementInstrumentation extends KanelaInstrumentation {
     * java.sql.Statement with kamon.jdbc.instrumentation.mixin.HasConnectionPoolMetrics
     *
     */
-  val withOneStringArgument = withArgument(0, classOf[String])
+  private val withOneStringArgument = withArgument(0, classOf[String])
 
   forSubtypeOf("java.sql.Statement") { builder =>
     builder
-       .withMixin(classOf[HasConnectionPoolMetricsMixin])
-       .withAdvisorFor(method("execute").and(withOneStringArgument), classOf[StatementExecuteMethodAdvisor])
-       .withAdvisorFor(method("executeQuery").and(withOneStringArgument), classOf[StatementExecuteQueryMethodAdvisor])
-       .withAdvisorFor(method("executeUpdate").and(withOneStringArgument), classOf[StatementExecuteUpdateMethodAdvisor])
-       .withAdvisorFor(anyMethod("executeBatch", "executeLargeBatch"), classOf[StatementExecuteBatchMethodAdvisor])
-       .build()
+      .withMixin(classOf[HasConnectionPoolMetricsMixin])
+      .withAdvisorFor(method("execute").and(withOneStringArgument), classOf[StatementExecuteMethodAdvisor])
+      .withAdvisorFor(method("executeQuery").and(withOneStringArgument), classOf[StatementExecuteQueryMethodAdvisor])
+      .withAdvisorFor(method("executeUpdate").and(withOneStringArgument), classOf[StatementExecuteUpdateMethodAdvisor])
+      .withAdvisorFor(anyMethod("executeBatch", "executeLargeBatch"), classOf[StatementExecuteBatchMethodAdvisor])
+      .build()
   }
 
 
@@ -66,20 +79,6 @@ class StatementInstrumentation extends KanelaInstrumentation {
       .withAdvisorFor(method("execute"), classOf[PreparedStatementExecuteMethodAdvisor])
       .withAdvisorFor(method("executeQuery"), classOf[PreparedStatementExecuteQueryMethodAdvisor])
       .withAdvisorFor(method("executeUpdate"), classOf[PreparedStatementExecuteUpdateMethodAdvisor])
-      .build()
-  }
-
-  /**
-    * Instrument:
-    *
-    * org.mariadb.jdbc.MariaDbServerPreparedStatement::executeQuery
-    * org.mariadb.jdbc.MariaDbServerPreparedStatement::executeUpdate
-    */
-  forTargetType("org.mariadb.jdbc.MariaDbServerPreparedStatement") { builder =>
-    builder
-      .withBridge(classOf[MariaPreparedStatement])
-      .withInterceptorFor(method("executeQuery"), MariaExecuteQueryMethodInterceptor)
-      .withInterceptorFor(method("executeUpdate"), MariaExecuteUpdateMethodInterceptor)
       .build()
   }
 }
