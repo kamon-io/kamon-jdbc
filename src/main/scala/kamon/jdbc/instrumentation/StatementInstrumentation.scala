@@ -17,7 +17,6 @@ package kamon.jdbc.instrumentation
 
 import kamon.jdbc.instrumentation.advisor._
 import kamon.jdbc.instrumentation.mixin.{HasConnectionPoolMetricsMixin, ProcessOnlyOnceMixin}
-import kanela.agent.libs.net.bytebuddy.matcher.ElementMatchers.{hasSuperType, named}
 import kanela.agent.scala.KanelaInstrumentation
 
 
@@ -30,8 +29,7 @@ class StatementInstrumentation extends KanelaInstrumentation {
     * with kamon.jdbc.instrumentation.mixin.ProcessOnlyOnceMixin
     *
     */
-  forMatchedTypeBy(hasSuperType(named("java.sql.Statement"))
-    .or(hasSuperType(named("java.sql.PreparedStatement")))) { builder =>
+  forSubtypeOf("java.sql.Statement" or "java.sql.PreparedStatement") { builder =>
     builder
       .withMixin(classOf[ProcessOnlyOnceMixin])
       .build()
