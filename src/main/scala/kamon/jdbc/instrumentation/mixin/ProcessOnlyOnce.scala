@@ -4,7 +4,7 @@ import kanela.agent.api.instrumentation.mixin.Initializer
 
 trait ProcessOnlyOnce {
   def processOnlyOnce[T](thunk: => T): Option[T]
-  def finish: Unit
+  def finish(): Unit
 }
 
 class ProcessOnlyOnceMixin extends ProcessOnlyOnce {
@@ -19,11 +19,9 @@ class ProcessOnlyOnceMixin extends ProcessOnlyOnce {
     } else None
   }
 
-  def finish: Unit = elementInProgress = None
+  def finish(): Unit = elementInProgress = None
 
   @Initializer
-  def init() = {
-    elementInProgress = None
-  }
+  def init(): Unit = elementInProgress = None
 
 }

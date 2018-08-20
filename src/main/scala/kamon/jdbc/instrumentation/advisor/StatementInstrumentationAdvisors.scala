@@ -16,13 +16,9 @@
 package kamon.jdbc.instrumentation.advisor
 
 import java.sql.{PreparedStatement, Statement}
-import java.time.Instant
 
 import kamon.jdbc.instrumentation.StatementMonitor
-import kamon.jdbc.instrumentation.StatementMonitor.StatementTypes
-import kamon.jdbc.instrumentation.mixin.ProcessOnlyOnce
-import kamon.metric.RangeSampler
-import kamon.trace.Span
+import kamon.jdbc.instrumentation.StatementMonitor.{KamonMonitorTraveler, StatementTypes}
 import kanela.agent.libs.net.bytebuddy.asm.Advice
 import kanela.agent.libs.net.bytebuddy.asm.Advice.Thrown
 
@@ -32,15 +28,13 @@ import kanela.agent.libs.net.bytebuddy.asm.Advice.Thrown
 class StatementExecuteMethodAdvisor
 object StatementExecuteMethodAdvisor {
   @Advice.OnMethodEnter(suppress = classOf[Throwable])
-  def executeStart(@Advice.This statement: Statement, @Advice.Argument(0) sql: String): Option[(Span, String, Instant, RangeSampler)] = {
-    statement
-      .asInstanceOf[ProcessOnlyOnce]
-      .processOnlyOnce(StatementMonitor.trackStart(statement, sql, StatementTypes.GenericExecute))
+  def executeStart(@Advice.This statement: Statement, @Advice.Argument(0) sql: String): Option[KamonMonitorTraveler] = {
+    StatementMonitor.start(statement, sql, StatementTypes.GenericExecute)
   }
 
   @Advice.OnMethodExit(onThrowable = classOf[Throwable], suppress = classOf[Throwable])
-  def executeEnd(@Advice.Enter traveler: Option[(Span, String, Instant, RangeSampler)], @Thrown throwable: Throwable): Unit = {
-    traveler.foreach(t => StatementMonitor.trackEnd(t, throwable))
+  def executeEnd(@Advice.Enter traveler: Option[KamonMonitorTraveler], @Thrown throwable: Throwable): Unit = {
+    traveler.foreach(_.close(throwable))
   }
 }
 
@@ -50,15 +44,13 @@ object StatementExecuteMethodAdvisor {
 class PreparedStatementExecuteMethodAdvisor
 object PreparedStatementExecuteMethodAdvisor {
   @Advice.OnMethodEnter(suppress = classOf[Throwable])
-  def executeStart(@Advice.This statement: PreparedStatement): Option[(Span, String, Instant, RangeSampler)] = {
-    statement
-      .asInstanceOf[ProcessOnlyOnce]
-      .processOnlyOnce(StatementMonitor.trackStart(statement, statement.toString, StatementTypes.GenericExecute))
+  def executeStart(@Advice.This statement: PreparedStatement): Option[KamonMonitorTraveler] = {
+    StatementMonitor.start(statement, statement.toString, StatementTypes.GenericExecute)
   }
 
   @Advice.OnMethodExit(onThrowable = classOf[Throwable], suppress = classOf[Throwable])
-  def executeEnd(@Advice.Enter traveler: Option[(Span, String, Instant, RangeSampler)], @Thrown throwable: Throwable): Unit = {
-    traveler.foreach(t => StatementMonitor.trackEnd(t, throwable))
+  def executeEnd(@Advice.Enter traveler: Option[KamonMonitorTraveler], @Thrown throwable: Throwable): Unit = {
+    traveler.foreach(_.close(throwable))
   }
 }
 
@@ -69,16 +61,13 @@ object PreparedStatementExecuteMethodAdvisor {
 class StatementExecuteQueryMethodAdvisor
 object StatementExecuteQueryMethodAdvisor  {
   @Advice.OnMethodEnter(suppress = classOf[Throwable])
-  def executeStart(@Advice.This statement: Statement, @Advice.Argument(0) sql: String): Option[(Span, String, Instant, RangeSampler)] = {
-    StatementMonitor.trackStart(statement, sql, StatementTypes.Query)
-    statement
-      .asInstanceOf[ProcessOnlyOnce]
-      .processOnlyOnce(StatementMonitor.trackStart(statement, sql, StatementTypes.Query))
+  def executeStart(@Advice.This statement: Statement, @Advice.Argument(0) sql: String): Option[KamonMonitorTraveler] = {
+    StatementMonitor.start(statement, sql, StatementTypes.Query)
   }
 
   @Advice.OnMethodExit(onThrowable = classOf[Throwable], suppress = classOf[Throwable])
-  def executeEnd(@Advice.Enter traveler: Option[(Span, String, Instant, RangeSampler)], @Thrown throwable: Throwable): Unit = {
-    traveler.foreach(t => StatementMonitor.trackEnd(t, throwable))
+  def executeEnd(@Advice.Enter traveler: Option[KamonMonitorTraveler], @Thrown throwable: Throwable): Unit = {
+    traveler.foreach(_.close(throwable))
   }
 }
 
@@ -88,15 +77,13 @@ object StatementExecuteQueryMethodAdvisor  {
 class PreparedStatementExecuteQueryMethodAdvisor
 object PreparedStatementExecuteQueryMethodAdvisor {
   @Advice.OnMethodEnter(suppress = classOf[Throwable])
-  def executeStart(@Advice.This statement: PreparedStatement): Option[(Span, String, Instant, RangeSampler)] = {
-    statement
-      .asInstanceOf[ProcessOnlyOnce]
-      .processOnlyOnce(StatementMonitor.trackStart(statement, statement.toString, StatementTypes.Query))
+  def executeStart(@Advice.This statement: PreparedStatement): Option[KamonMonitorTraveler] = {
+    StatementMonitor.start(statement, statement.toString, StatementTypes.Query)
   }
 
   @Advice.OnMethodExit(onThrowable = classOf[Throwable], suppress = classOf[Throwable])
-  def executeEnd(@Advice.Enter traveler: Option[(Span, String, Instant, RangeSampler)], @Thrown throwable: Throwable): Unit = {
-    traveler.foreach(t => StatementMonitor.trackEnd(t, throwable))
+  def executeEnd(@Advice.Enter traveler: Option[KamonMonitorTraveler], @Thrown throwable: Throwable): Unit = {
+    traveler.foreach(_.close(throwable))
   }
 }
 
@@ -106,15 +93,13 @@ object PreparedStatementExecuteQueryMethodAdvisor {
 class StatementExecuteUpdateMethodAdvisor
 object StatementExecuteUpdateMethodAdvisor  {
   @Advice.OnMethodEnter(suppress = classOf[Throwable])
-  def executeStart(@Advice.This statement: Statement, @Advice.Argument(0) sql: String): Option[(Span, String, Instant, RangeSampler)] = {
-    statement
-      .asInstanceOf[ProcessOnlyOnce]
-      .processOnlyOnce(StatementMonitor.trackStart(statement, sql, StatementTypes.Update))
+  def executeStart(@Advice.This statement: Statement, @Advice.Argument(0) sql: String): Option[KamonMonitorTraveler] = {
+    StatementMonitor.start(statement, sql, StatementTypes.Update)
   }
 
   @Advice.OnMethodExit(onThrowable = classOf[Throwable], suppress = classOf[Throwable])
-  def executeEnd(@Advice.Enter traveler: Option[(Span, String, Instant, RangeSampler)], @Thrown throwable: Throwable): Unit = {
-    traveler.foreach(t => StatementMonitor.trackEnd(t, throwable))
+  def executeEnd(@Advice.Enter traveler: Option[KamonMonitorTraveler], @Thrown throwable: Throwable): Unit = {
+    traveler.foreach(_.close(throwable))
   }
 }
 
@@ -124,15 +109,13 @@ object StatementExecuteUpdateMethodAdvisor  {
 class PreparedStatementExecuteUpdateMethodAdvisor
 object PreparedStatementExecuteUpdateMethodAdvisor {
   @Advice.OnMethodEnter(suppress = classOf[Throwable])
-  def executeStart(@Advice.This statement: PreparedStatement): Option[(Span, String, Instant, RangeSampler)] = {
-    statement
-      .asInstanceOf[ProcessOnlyOnce]
-      .processOnlyOnce(StatementMonitor.trackStart(statement, statement.toString, StatementTypes.Update))
+  def executeStart(@Advice.This statement: PreparedStatement): Option[KamonMonitorTraveler] = {
+    StatementMonitor.start(statement, statement.toString, StatementTypes.Update)
   }
 
   @Advice.OnMethodExit(onThrowable = classOf[Throwable], suppress = classOf[Throwable])
-  def executeEnd(@Advice.Enter traveler: Option[(Span, String, Instant, RangeSampler)], @Thrown throwable: Throwable): Unit = {
-    traveler.foreach(t => StatementMonitor.trackEnd(t, throwable))
+  def executeEnd(@Advice.Enter traveler: Option[KamonMonitorTraveler], @Thrown throwable: Throwable): Unit = {
+    traveler.foreach(_.close(throwable))
   }
 }
 
@@ -143,14 +126,12 @@ object PreparedStatementExecuteUpdateMethodAdvisor {
 class StatementExecuteBatchMethodAdvisor
 object StatementExecuteBatchMethodAdvisor  {
   @Advice.OnMethodEnter(suppress = classOf[Throwable])
-  def executeStart(@Advice.This statement: Statement): Option[(Span, String, Instant, RangeSampler)] = {
-    statement
-      .asInstanceOf[ProcessOnlyOnce]
-      .processOnlyOnce(StatementMonitor.trackStart(statement, statement.toString, StatementTypes.Batch))
+  def executeStart(@Advice.This statement: Statement): Option[KamonMonitorTraveler] = {
+    StatementMonitor.start(statement, statement.toString, StatementTypes.Batch)
   }
 
   @Advice.OnMethodExit(onThrowable = classOf[Throwable], suppress = classOf[Throwable])
-  def executeEnd(@Advice.Enter traveler: Option[(Span, String, Instant, RangeSampler)], @Thrown throwable: Throwable): Unit = {
-    traveler.foreach(t => StatementMonitor.trackEnd(t, throwable))
+  def executeEnd(@Advice.Enter traveler: Option[KamonMonitorTraveler], @Thrown throwable: Throwable): Unit = {
+    traveler.foreach(_.close(throwable))
   }
 }
