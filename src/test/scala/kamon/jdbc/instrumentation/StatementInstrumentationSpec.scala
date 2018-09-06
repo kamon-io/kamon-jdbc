@@ -201,6 +201,36 @@ class StatementInstrumentationSpec extends WordSpec with Matchers with Eventuall
 
       Try(connection.createStatement().execute(select)).failed.get.getMessage should include("""Table "NOTATABLE" not found""")
     }
+
+    "not attach db.statement tag to Spans when configured not to" in {
+      applyConfig("kamon.jdbc.attach-statement = false")
+
+      val select = s"SELECT * FROM Address where Nr = 1"
+      connection.prepareStatement(select).execute()
+
+      eventually {
+        val span = reporter.nextSpan().value
+        span.operationName shouldBe StatementTypes.GenericExecute
+        span.tags("component") shouldBe TagValue.String("jdbc")
+        span.tags.keys should not contain "db.statement"
+      }
+    }
+
+    "not attach detailed error information to Spans when configured not to" in {
+      applyConfig("kamon.jdbc.attach-error = false")
+
+      val select = s"SELECT * FROM NotATable where Nr = 1"
+
+      Try(connection.createStatement().execute(select))
+
+      eventually {
+        val span = reporter.nextSpan().value
+        span.operationName shouldBe StatementTypes.GenericExecute
+        span.tags("component") shouldBe TagValue.String("jdbc")
+        span.tags("error") shouldBe TagValue.True
+        span.tags.keys should not contain "error.object"
+      }
+    }
   }
 
   var registration: Registration = _

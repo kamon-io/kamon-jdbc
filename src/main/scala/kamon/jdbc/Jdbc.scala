@@ -27,6 +27,8 @@ object Jdbc {
   @volatile private var slowQueryThresholdMicroseconds: Long = 2000000
   @volatile private var slowQueryProcessor: SlowQueryProcessor = new SlowQueryProcessor.Default
   @volatile private var sqlErrorProcessor: SqlErrorProcessor = new SqlErrorProcessor.Default
+  @volatile private var attachStatement: Boolean = true
+  @volatile private var attachError: Boolean = true
 
   loadConfiguration(Kamon.config())
 
@@ -41,6 +43,9 @@ object Jdbc {
     try {
       val jdbcConfig = config.getConfig("kamon.jdbc")
       val dynamic = new DynamicAccess(getClass.getClassLoader)
+
+      attachStatement = jdbcConfig.getBoolean("attach-statement")
+      attachError = jdbcConfig.getBoolean("attach-error")
 
       val slowQueryProcessorFQCN = jdbcConfig.getString("slow-query-processor")
       slowQueryProcessor = dynamic.createInstanceFor[SlowQueryProcessor](slowQueryProcessorFQCN, Nil).get
@@ -63,6 +68,9 @@ object Jdbc {
   def onStatementError(statement: String, error: Throwable): Unit = {
     sqlErrorProcessor.process(statement, error)
   }
+
+  def shouldAttachStatement: Boolean = attachStatement
+  def shouldAttachError: Boolean = attachError
 
   /**
     * Callback for notifications of statements taking longer than kamon.jdbc.slow-query-threshold microseconds to

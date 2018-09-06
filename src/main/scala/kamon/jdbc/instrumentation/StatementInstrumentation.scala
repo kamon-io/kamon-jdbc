@@ -111,7 +111,10 @@ class StatementInstrumentation {
       val builder = buildSpan(statementType)
         .withFrom(startTimestamp)
         .withTag("component", "jdbc")
-        .withTag("db.statement", sql)
+
+      if (Jdbc.shouldAttachStatement) {
+        builder.withTag("db.statement", sql)
+      }
 
       poolTags.foreach { case (key, value) => builder.withTag(key, value) }
       builder
@@ -123,7 +126,11 @@ class StatementInstrumentation {
 
     } catch {
       case t: Throwable =>
-        span.addError("error.object", t)
+        if (Jdbc.shouldAttachError) {
+          span.addError("error.object", t)
+        } else {
+          span.tag("error", true)
+        }
         Jdbc.onStatementError(sql, t)
         throw t
 
