@@ -26,7 +26,7 @@ val hikariCP            = "com.zaxxer"                % "HikariCP"              
 lazy val root = (project in file("."))
   .enablePlugins(JavaAgent)
   .settings(name := "kamon-jdbc")
-  .settings(javaAgents += "io.kamon"    % "kanela-agent"   % "0.0.14"  % "compile;test")
+  .settings(javaAgents += "io.kamon"    % "kanela-agent"   % "0.0.400"  % "compile;test")
   .settings(resolvers += Resolver.bintrayRepo("kamon-io", "snapshots"))
   .settings(resolvers += Resolver.mavenLocal)
   .settings(
