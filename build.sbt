@@ -17,6 +17,9 @@ val kamonCore  =        "io.kamon"        %% "kamon-core"         % "1.1.0"
 val kamonTestkit  =     "io.kamon"        %% "kamon-testkit"      % "1.1.0"
 val h2 =                "com.h2database"   % "h2"                 % "1.4.196"
 val hikariCP =          "com.zaxxer"       % "HikariCP"           % "2.7.4"
+val x = "net.sourceforge.jregex" % "jregex" % "1.2_01"
+val zz = "com.google.guava" % "guava" % "19.0"
+
 
 resolvers += Resolver.bintrayRepo("kamon-io", "snapshots")
 
@@ -25,6 +28,6 @@ lazy val root = (project in file("."))
   .settings(aspectJSettings: _*)
   .settings(
       libraryDependencies ++=
-        compileScope(kamonCore) ++
+        compileScope(kamonCore, x, zz) ++
         providedScope(aspectJ, hikariCP) ++
         testScope(h2, kamonTestkit, scalatest, slf4jApi, logbackClassic))
